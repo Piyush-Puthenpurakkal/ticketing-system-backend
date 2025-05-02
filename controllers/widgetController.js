@@ -2,27 +2,26 @@ const WidgetSettings = require("../models/WidgetSettings");
 
 exports.getSettings = async (req, res) => {
   try {
-    let w = await WidgetSettings.findOne({ user: req.user._id });
-    if (!w) {
-      w = await WidgetSettings.create({ user: req.user._id });
+    let settings = await WidgetSettings.findOne();
+    if (!settings) {
+      settings = await WidgetSettings.create({});
     }
-    res.json(w);
+    res.json(settings);
   } catch (err) {
-    console.error(err);
+    console.error("Error in getSettings:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
 exports.updateSettings = async (req, res) => {
   try {
-    const updated = await WidgetSettings.findOneAndUpdate(
-      { user: req.user._id },
-      req.body,
-      { new: true, upsert: true }
-    );
+    const updated = await WidgetSettings.findOneAndUpdate({}, req.body, {
+      new: true,
+      upsert: true,
+    });
     res.json(updated);
   } catch (err) {
-    console.error(err);
+    console.error("Error in updateSettings:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
