@@ -10,6 +10,7 @@ const teamRoutes = require("./routes/team");
 const chatRoutes = require("./routes/chat");
 const analyticsRoutes = require("./routes/analytics");
 const widgetRoutes = require("./routes/widget");
+const chatbotRoutes = require("./routes/chatbot");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/team", teamRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/widget", widgetRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
