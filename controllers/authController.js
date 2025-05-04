@@ -1,7 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const TeamMember = require("../models/TeamMember");
 
 exports.register = async (req, res) => {
   const {
@@ -13,12 +12,10 @@ exports.register = async (req, res) => {
     role,
     adminCode,
   } = req.body;
-
   try {
     if (await User.findOne({ email })) {
       return res.status(400).json({ msg: "Email already in use" });
     }
-
     let assignedRole = "member";
     if (role === "admin") {
       if (adminCode !== process.env.ADMIN_SECRET) {
@@ -26,10 +23,8 @@ exports.register = async (req, res) => {
       }
       assignedRole = "admin";
     }
-
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(password, salt);
-
     const user = new User({
       firstName,
       lastName,
@@ -39,24 +34,9 @@ exports.register = async (req, res) => {
       role: assignedRole,
     });
     await user.save();
-
-    if (assignedRole === "member") {
-      const adminUser = await User.findOne({ role: "admin" });
-      if (adminUser) {
-        await TeamMember.create({
-          name: `${user.firstName} ${user.lastName}`,
-          email: user.email,
-          role: "Member",
-          user: user._id,
-          createdBy: adminUser._id,
-        });
-      }
-    }
-
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
-
     res.status(201).json({
       token,
       user: {
@@ -79,14 +59,11 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: "Invalid credentials" });
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
-
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRES_IN,
     });
-
     res.json({
       token,
       user: {
@@ -113,11 +90,9 @@ exports.updateProfile = async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ msg: "User not found" });
-
     const emailChanged = email && email !== user.email;
     const passwordChanged =
       password && !(await bcrypt.compare(password, user.password));
-
     if (firstName !== undefined) user.firstName = firstName;
     if (lastName !== undefined) user.lastName = lastName;
     if (emailChanged) user.email = email;
@@ -125,7 +100,6 @@ exports.updateProfile = async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
     }
-
     await user.save();
     res.json({ updated: true, logout: emailChanged || passwordChanged });
   } catch (err) {
